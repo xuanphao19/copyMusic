@@ -5,13 +5,14 @@
   let firstScriptTag = document.getElementsByTagName("script")[0];
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
   let player;
-
-  // Creating an object for the video using YouTube's API.
+  let playListId = "PLEyKu1JwbU4tRuFhxXtdOLwVekjn3JFbJ";
+  $.ajaxSetup({
+    async: false,
+  });
   function onYouTubeIframeAPIReady() {
     player = new YT.Player("player", {
       width: "950",
       height: "534",
-      // videoId: "cCcLNNfn7DE", Chỉ định video mặc định khi tải trang
       playerVars: {
         playsinline: 1,
         controls: 0,
@@ -25,13 +26,14 @@
         autoplay: 0,
         m: 0,
         enablejsapi: 1,
+        maxResults: 10,
+        list: playListId,
       },
       events: {
         onReady: onPlayerReady,
       },
     });
   }
-
   let vol = 50;
   const volControls = document.querySelector(".volControls");
   const volControl = document.querySelector(".volControl");
@@ -42,50 +44,26 @@
   function getRandom(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
   }
-
   function onPlayerReady(_event) {
     player.cuePlaylist({
       listType: "playlist",
-      // list: PL5ED23F88FA83369B // (NHỮNG ID PLAYLIST CÓ KHẢ THI)
-      // list: PLgHGispmpXWZC2UNYuh4kHOxAk3dhb4hD // Hay!
-      // list: PLZxu0fu1e7uMzrLTUv6M8-XW3Rc3Le7e0 // Khúc hát sông quê!
-      // list: "PL_-VfJajZj0VgpFpEVFzS5Z-lkXtBe-x5", // Js Sơn Đặng
-      // list: "PL_-VfJajZj0Uwu5Y5G-wSet5uhKGxE7Cq", // Js Sơn Đặng
-      // list: "PL_-VfJajZj0UjLMzxqGXUoE6iqpfbZysn", // Js Sơn Đặng
-      // list: "PL_-VfJajZj0V5PMIaUflQ2UvpL9XZZhWT", // Js Sơn Đặng
-      list: "RDCLAMNkRnLEg",
-      //
       index: 0,
       startSeconds: 0,
       suggestedQuality: "hd720",
     });
-
     player.setShuffle({
       shufflePlaylist: 1,
     });
-
     player.addEventListener("onStateChange", "onPlayerStateChange");
     player.stopVideo();
     showTime();
-    ////////////////////////////////////////////////
   }
-
-  // Sử lý sau video playing thì vào đây 👇👇👇
   function onPlayerStateChange(event) {
-    // if (player.getPlayerState() == -1) { No video }
-    // if (player.getPlayerState() == 1) { play Video }
-    // if (player.getPlayerState() == 2) { pause Video }
-    // if (player.getPlayerState() == 3) { prev & Next }
-    // if (player.getPlayerState() == 5) { stop Video }
-
     if ([1, 2, 5].indexOf(player.getPlayerState()) >= 0) {
       if (player.videoTitle) {
         document.getElementById("title").innerText = player.videoTitle;
       }
     }
-
-    //   // Lấy danh sách id playList có video đang phát!
-
     if (event.data === 1) {
       playPause.style.display = "none";
       playPauseImg.style.display = "flex";
@@ -98,27 +76,23 @@
       playPause.style.display = "flex";
       playPauseImg.style.display = "none";
     }
-
     volControls.onmouseout = function () {
       volControl.style.display = "none";
       volControls.style.backgroundColor = "transparent";
       volControls.style.backdropFilter = "blur(0)";
     };
-
     volControl.onmousedown = function (e) {
       if (e.target.matches(".volUp") || e.target.matches(".volDown")) {
         e.target.style.backgroundColor = "#abfabf80";
         e.target.style.backgroundSize = "contain";
       }
     };
-
     volControl.onmouseup = function (e) {
       if (e.target.matches(".volUp") || e.target.matches(".volDown")) {
         e.target.style.backgroundColor = "transparent";
         e.target.style.backgroundSize = 0;
       }
     };
-
     volControl.onclick = function (e) {
       e.stopPropagation();
       if (e.target.matches(".volUp") && vol < 100) {
@@ -128,7 +102,6 @@
       }
       player.setVolume(vol);
     };
-
     var isPlaying = false;
     function playPauseVideo() {
       switch (player.getPlayerState()) {
@@ -145,29 +118,22 @@
           return;
       }
     }
-
     const overlayControl = document.querySelector(".overlayVideo");
     overlayControl.onclick = function () {
       playPauseVideo();
     };
-
     playPauseBtn.onclick = function () {
       playPauseVideo();
     };
-
-    // Chỉ định phát Video theo id OK
     function specifiedVideo(id) {
       player.cueVideoById(id);
-      // player.playVideoAt(n); n = index
     }
-
     const videoPlaylists = document.querySelector(".videoPlaylists");
     videoPlaylists.onclick = function (e) {
       if (e.target.matches(".videoItem")) {
         specifiedVideo(e.target.id);
       }
     };
-
     function stopVideo() {
       playPause.style.display = "flex";
       player.stopVideo();
@@ -176,56 +142,64 @@
     StopVideoBtn.onclick = function () {
       stopVideo();
     };
-
     const testVideoBtn = document.querySelector(".testVideo");
     testVideoBtn.onclick = () => {
       testVideo();
     };
-    function testVideo() {
-      player.nextVideo();
-      //    event.target.mute();
-      //    event.target.setShuffle(true); Ok!
-      //    event.target.setLoop(true); Ok?
-      //    playRandomTrack();
-      // player.previousVideo() Ok!
-      // handleStateChange(); PL_-VfJajZj0VgpFpEVFzS5Z-lkXtBe-x5
-    }
-
-    // function showPlayList() {}
-    // showPlayList(); handleData
-
-    var dataListIdVideo = player.getPlaylist();
-    const contentVideo = document.getElementById("hungTinh");
     var url = "";
-    function handleData(dataListIdVideo) {
-      if (dataListIdVideo && player.getPlayerState() === 5) {
-        dataListIdVideo.map((IdVideo, i) => {
+    var dataListIdVideo;
+    const contentVideo = document.getElementById("hungTinh");
+    function handleVideoPlaylist(listIdVideo) {
+      if (listIdVideo) {
+        listIdVideo = listIdVideo;
+      } else {
+        listIdVideo = player.getPlaylist();
+      }
+      if (listIdVideo && player.getPlayerState() === 5) {
+        handleData(listIdVideo);
+      }
+    }
+    handleVideoPlaylist(dataListIdVideo);
+
+    function handleData(listIds) {
+      if (listIds && player.getPlayerState() === 5) {
+        const htmls = listIds.map((IdVideo, i) => {
           url = "https://www.youtube.com/watch?v=" + IdVideo;
-          $.getJSON(
-            "https://noembed.com/embed",
-            {format: "json", url: url},
-            function (data) {
-              if (data.url.includes(IdVideo)) {
-                showPlayList(data, IdVideo, i);
-              }
-            },
-          );
+          return getTitle(url, IdVideo, i);
         });
       }
     }
-    handleData(dataListIdVideo);
-
-    function showPlayList(data, IdVideo, i) {
+    function getTitle(url, Id, i) {
+      return $.getJSON("https://noembed.com/embed", {
+        format: "json",
+        url: url,
+      }).then(function (data) {
+        showPlayList(data, Id, i);
+      });
+    }
+    function showPlayList(data, Id, i) {
       let answerEle = document.createElement("li");
-      answerEle.id = `${IdVideo}`;
+      answerEle.id = `${Id}`;
       answerEle.className = "videoItem";
       answerEle.innerText = `${i + 1} - ${data.title}`;
       contentVideo.lastChild.after(answerEle);
+      return answerEle;
     }
-    ////////////////////////////////////////////////////////////////
+    function changePlaylist(playListId) {
+      contentVideo.innerHTML = `<p></p>`;
+      playListId = "PL_-VfJajZj0VgpFpEVFzS5Z-lkXtBe-x5";
+      player.cuePlaylist({
+        list: playListId,
+        index: 1,
+        startSeconds: 0,
+      });
+      dataListIdVideo = player.getPlaylist();
+      handleVideoPlaylist(dataListIdVideo);
+    }
+    function testVideo() {
+      changePlaylist();
+    }
   }
-
-  ////////////////////////////////////////////////////////////////
   function showTime() {
     let cur_hh = document.querySelector(".cur_hh");
     let cur_mm = document.querySelector(".cur_mm");
@@ -252,10 +226,4 @@
       }
     }, 1000);
   }
-
-  // function handleStateChange() {
-  //   // player.removeEventListener();
-  //   onPlayerStateChange = function () {};
-  // }
 }
-// let answer = element.matches(".container");3vBwRfQbXkg
